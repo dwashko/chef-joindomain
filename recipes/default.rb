@@ -1,26 +1,22 @@
-script 'joindomain' do
-  interpreter 'bash'
-  user 'root'
-  cwd '/tmp'
-  code <<-EOH
-  #/bin/sh
-  echo "joining domain"
-    DomainAdmin=#{node['joindomain']['domainadmin']}
-    DomainAdminPW=#{node['joindomain']['domainadminpassword']}
-    trHostName=$(hostname | tr [':lower:'] [':upper:'])
-    domainPath="#{node['joindomain']['domainpath']}"
-    kbrealm="#{node['joindomain']['kbrealm']}"
-    #addomaindns=#{node['joindomain']['domainddns']}
-    # join to domain
-    CMP=$(net ads dn "CN=$trHostName,$domainPath" cn -S #{node['joindomain']['specificserver']} -P -l)
-    if [ -z $CMP]; then
-      net ads join -U $DomainAdmin%$DomainAdminPW \
-        createcomputer=$domainPath \
-        createupn=host/$upn@$kbrealm > /tmp/netjoin.log 2>&1
+domains = data_bag('domains')
 
-      net ads keytab create -U $DomainAdmin%$DomainAdminPW > /tmp/ktpass.log 2>&1
-    #  cp /dev/null /etc/openldap/ldap.conf
-      exec > /dev/null 2>&1
-    fi
-  EOH
+domains.each do |domain|
+  opts = data_bag_item('domains', domain)
+
+  template '/tmp/joindomain.sh' do
+    source 'joindomain.erb'
+    mode '0700'
+    variables ({
+      :domainadmin => opts['domainadmin'],
+      :domainadminpassword => opts['domainadminpassword'],
+      :domainpath => opts['domainpath'],
+      :kbrealm => opts['kbrealm'],
+      :specificserver => opts['specificserver']
+    })
+  end
+
+  execute 'joindomain script' do
+    command '/tmp/joindomain.sh'
+    action :run
+  end
 end

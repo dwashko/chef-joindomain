@@ -17,9 +17,4 @@
 # limitations under the License.
 #
 
-default['joindomain']['domainadmin'] = 'domainadmin'
-default['joindomain']['domainadminpassword'] = 'passwd'
-default['joindomain']['kbrealm'] = ''
-default['joindomain']['domainpath'] = 'OU=,DC=,DC='
-default['joindomain']['specificserver'] = 'server.net'
-default['joindomain']['domaindns'] = ''
+# all attributes should be in a databag
